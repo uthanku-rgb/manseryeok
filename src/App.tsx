@@ -1,8 +1,12 @@
 import { useState, useCallback } from 'react';
 import { calculateManseryeok, ELEMENT_COLOR, ELEMENT_KO } from './lib/manseryeok';
 import type { ManseryeokResult } from './lib/manseryeok';
+import type { ManseryeokClient } from './lib/supabase';
+import { useAuth } from './hooks/useAuth';
 import SajuChart from './components/SajuChart';
 import DaeunTimeline from './components/DaeunTimeline';
+import ClientList from './components/ClientList';
+import SaveClientButton from './components/SaveClientButton';
 import './App.css';
 
 type FormValues = {
@@ -105,9 +109,12 @@ function ElementSummary({ result }: { result: ManseryeokResult }) {
 }
 
 export default function App() {
+  const { user, loading: authLoading, isLoggedIn, signInWithGoogle, signOut } = useAuth();
   const [values, setValues] = useState<FormValues>(defaultValues);
   const [result, setResult] = useState<ManseryeokResult | null>(null);
   const [isCalculated, setIsCalculated] = useState(false);
+  const [clientListKey, setClientListKey] = useState(0);
+  const [selectedClientName, setSelectedClientName] = useState<string | null>(null);
 
   const handleChange = useCallback((key: keyof FormValues, value: string | boolean) => {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -129,19 +136,88 @@ export default function App() {
     );
     setResult(r);
     setIsCalculated(true);
+    setSelectedClientName(null);
   }, [values]);
 
   const handleReset = useCallback(() => {
     setResult(null);
     setIsCalculated(false);
+    setSelectedClientName(null);
   }, []);
 
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
 
+  const handleClientSelect = useCallback((client: ManseryeokClient) => {
+    const hour = client.birth_hour != null ? client.birth_hour : 12;
+    const unknownTime = client.birth_hour == null;
+
+    const r = calculateManseryeok(
+      client.birth_year,
+      client.birth_month,
+      client.birth_day,
+      hour,
+      client.gender,
+      client.calendar,
+      unknownTime,
+    );
+    setResult(r);
+    setIsCalculated(true);
+    setSelectedClientName(client.name);
+
+    // Also update form values
+    setValues({
+      year: String(client.birth_year),
+      month: String(client.birth_month),
+      day: String(client.birth_day),
+      hour: client.birth_hour != null ? String(client.birth_hour) : '12',
+      minute: '0',
+      gender: client.gender,
+      calendar: client.calendar,
+      unknownTime,
+    });
+  }, []);
+
+  const handleSaved = useCallback(() => {
+    setClientListKey((prev) => prev + 1);
+  }, []);
+
   return (
     <div className="manseryeok-page">
+      {/* Auth Bar */}
+      <div className="auth-bar no-print">
+        {authLoading ? (
+          <span className="auth-loading">⋯</span>
+        ) : isLoggedIn ? (
+          <div className="auth-user">
+            {user?.user_metadata?.avatar_url && (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt=""
+                className="auth-avatar"
+              />
+            )}
+            <span className="auth-name">
+              {user?.user_metadata?.full_name || user?.email || ''}
+            </span>
+            <button type="button" className="auth-btn logout" onClick={signOut}>
+              로그아웃
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="auth-btn login" onClick={signInWithGoogle}>
+            <svg width="16" height="16" viewBox="0 0 24 24" style={{ marginRight: 6 }}>
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Google 로그인
+          </button>
+        )}
+      </div>
+
       {/* Header */}
       <div className="manseryeok-header">
         <div className="header-decoration">
@@ -153,6 +229,13 @@ export default function App() {
         <h1 className="page-title">만세력</h1>
         <p className="page-subtitle">萬歲曆 · 사주팔자 · 지장간 · 대운</p>
       </div>
+
+      {/* Client List (logged in only) */}
+      {isLoggedIn && !isCalculated && (
+        <div className="client-section no-print">
+          <ClientList key={clientListKey} onSelect={handleClientSelect} />
+        </div>
+      )}
 
       {/* Input Form */}
       {!isCalculated && (
@@ -299,19 +382,35 @@ export default function App() {
       {isCalculated && result && (
         <div className="result-section">
           <div className="birth-summary">
-            <span className="birth-info">
-              {result.birthInfo.calendar === 'solar' ? '양력' : '음력'}{' '}
-              {result.birthInfo.year}년 {result.birthInfo.month}월 {result.birthInfo.day}일{' '}
-              {result.birthInfo.unknownTime ? '(시간 미상)' : `${result.birthInfo.hour}시`}{' '}
-              · {result.birthInfo.gender === '남' ? '♂ 남자' : '♀ 여자'}
-            </span>
-            <div className="result-actions">
+            <div className="birth-summary-left">
+              {selectedClientName && (
+                <span className="client-name-badge">{selectedClientName}</span>
+              )}
+              <span className="birth-info">
+                {result.birthInfo.calendar === 'solar' ? '양력' : '음력'}{' '}
+                {result.birthInfo.year}년 {result.birthInfo.month}월 {result.birthInfo.day}일{' '}
+                {result.birthInfo.unknownTime ? '(시간 미상)' : `${result.birthInfo.hour}시`}{' '}
+                · {result.birthInfo.gender === '남' ? '♂ 남자' : '♀ 여자'}
+              </span>
+            </div>
+            <div className="result-actions no-print">
               <button type="button" className="action-btn" onClick={handleReset}>
                 다시 조회
               </button>
               <button type="button" className="action-btn print-btn" onClick={handlePrint}>
                 🖨 인쇄
               </button>
+              {isLoggedIn && !selectedClientName && (
+                <SaveClientButton
+                  birthYear={parseInt(values.year, 10)}
+                  birthMonth={parseInt(values.month, 10)}
+                  birthDay={parseInt(values.day, 10)}
+                  birthHour={values.unknownTime ? null : parseInt(values.hour, 10)}
+                  gender={values.gender}
+                  calendar={values.calendar}
+                  onSaved={handleSaved}
+                />
+              )}
             </div>
           </div>
 

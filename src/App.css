@@ -692,9 +692,368 @@
 }
 
 /* ========================================
+   Auth Bar
+   ======================================== */
+
+.auth-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 8px 0;
+}
+
+.auth-loading {
+  font-size: 14px;
+  color: #5a4d40;
+}
+
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.auth-name {
+  font-size: 12px;
+  color: #3d3028;
+  font-weight: 500;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.auth-btn.login {
+  background: #fff;
+  color: #3d3028;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.auth-btn.login:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.auth-btn.logout {
+  background: transparent;
+  color: #6b5b4e;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.auth-btn.logout:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   Client List
+   ======================================== */
+
+.client-section {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 0 8px;
+}
+
+.client-list-container {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.client-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.client-list-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d2520;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.client-list-icon {
+  font-size: 16px;
+}
+
+.client-count {
+  font-size: 11px;
+  color: #6b5b4e;
+  font-weight: 400;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.client-search {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  color: #1a1410;
+  width: 160px;
+}
+
+.client-search:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.08);
+}
+
+.client-loading {
+  text-align: center;
+  color: #6b5b4e;
+  padding: 20px;
+  font-size: 13px;
+}
+
+.client-empty {
+  text-align: center;
+  color: #6b5b4e;
+  padding: 24px 16px;
+  font-size: 13px;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.client-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.client-card {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.client-card:hover {
+  border-color: rgba(124, 58, 237, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.client-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.client-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1410;
+}
+
+.client-delete-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #b8a99a;
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.client-card:hover .client-delete-btn {
+  opacity: 1;
+}
+
+.client-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.client-card-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.client-birth {
+  font-size: 11px;
+  color: #5a4d40;
+}
+
+.client-gender {
+  font-size: 11px;
+  color: #6b5b4e;
+}
+
+.client-memo {
+  font-size: 10px;
+  color: #8b7d6e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================
+   Save Client Button / Form
+   ======================================== */
+
+.save-client-btn {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #16a34a;
+}
+
+.save-client-btn:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.saved-badge {
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 600;
+  padding: 6px 14px;
+}
+
+.save-client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+}
+
+.save-client-inputs {
+  display: flex;
+  gap: 6px;
+}
+
+.save-client-name,
+.save-client-memo {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: #1a1410;
+}
+
+.save-client-name:focus,
+.save-client-memo:focus {
+  outline: none;
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+}
+
+.save-client-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.save-confirm-btn {
+  padding: 5px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #16a34a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-confirm-btn:hover {
+  background: #15803d;
+}
+
+.save-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-cancel-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: #6b5b4e;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   Birth Summary updated
+   ======================================== */
+
+.birth-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.client-name-badge {
+  font-size: 14px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
+  padding: 3px 12px;
+  border-radius: 8px;
+}
+
+/* ========================================
    Print Styles
    ======================================== */
 @media print {
+  .no-print {
+    display: none !important;
+  }
+
   .manseryeok-page {
     background: white;
     color: #0f172a;
@@ -713,10 +1072,6 @@
 
   .page-subtitle {
     color: #64748b;
-  }
-
-  .result-actions {
-    display: none;
   }
 
   .result-card {
@@ -784,6 +1139,10 @@
     font-size: 28px;
   }
 
+  .manseryeok-header {
+    padding: 32px 0 16px;
+  }
+
   .input-card {
     padding: 20px 16px;
   }
@@ -795,6 +1154,10 @@
   .birth-summary {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .result-actions {
+    flex-wrap: wrap;
   }
 
   .saju-row {
@@ -826,5 +1189,17 @@
 
   .seun-grid {
     grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  }
+
+  .client-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .save-client-inputs {
+    flex-direction: column;
+  }
+
+  .auth-name {
+    display: none;
   }
 }
