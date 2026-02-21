@@ -437,6 +437,27 @@
   margin-top: 2px;
 }
 
+/* 金 (Metal) element — white text needs dark background to be visible */
+.metal-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 8px rgba(180, 170, 140, 0.4);
+}
+
+.metal-text-sm {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.metal-text-xs {
+  color: #6b5e50 !important;
+}
+
+/* Dark metallic background for 金 element cells */
+.metal-bg {
+  background: linear-gradient(135deg, #5a5349, #6b6258) !important;
+  border-color: #7a705f !important;
+}
+
 .unknown-char {
   font-size: 28px;
   color: #8b7d6e;
@@ -689,6 +710,91 @@
   display: flex;
   gap: 3px;
   font-size: 10px;
+}
+
+/* 일운 */
+.ilun-scroll {
+  overflow-x: auto;
+  padding: 8px 0 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+}
+
+.ilun-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.ilun-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.ilun-track {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.ilun-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-width: 72px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.ilun-card:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ilun-card.current {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.ilun-date {
+  font-size: 11px;
+  color: #2d2520;
+  font-weight: 600;
+}
+
+.ilun-dow {
+  font-size: 9px;
+  color: #5a4d40;
+  font-weight: 500;
+}
+
+.ilun-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.ilun-hanja {
+  font-size: 20px;
+  font-weight: 300;
+  font-family: 'Noto Serif KR', 'Noto Serif', serif;
+  line-height: 1.1;
+}
+
+.ilun-hangul {
+  display: flex;
+  gap: 3px;
+  font-size: 10px;
+}
+
+.ilun-elements {
+  display: flex;
+  gap: 3px;
+  margin-top: 1px;
 }
 
 /* ========================================
@@ -1125,6 +1231,18 @@
   .seun-card {
     border: 1px solid #ddd;
   }
+
+  .ilun-scroll {
+    overflow: visible;
+  }
+
+  .ilun-track {
+    flex-wrap: wrap;
+  }
+
+  .ilun-card {
+    border: 1px solid #ddd;
+  }
 }
 
 /* ========================================
@@ -1201,5 +1319,14 @@
 
   .auth-name {
     display: none;
+  }
+
+  .ilun-card {
+    min-width: 60px;
+    padding: 8px 6px;
+  }
+
+  .ilun-hanja {
+    font-size: 16px;
   }
 }

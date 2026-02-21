@@ -46,18 +46,18 @@ export const ELEMENT_KO: Record<Element, ElementKo> = {
 export const ELEMENT_COLOR: Record<Element, string> = {
     '木': '#22c55e',
     '火': '#ef4444',
-    '土': '#eab308',
-    '金': '#e2e8f0',
-    '水': '#3b82f6',
+    '土': '#d4a017',
+    '金': '#ffffff',
+    '水': '#1a1a1a',
 };
 
 /** 오행별 배경 색상 (투명도 적용) */
 export const ELEMENT_BG: Record<Element, string> = {
     '木': 'rgba(34,197,94,0.15)',
     '火': 'rgba(239,68,68,0.15)',
-    '土': 'rgba(234,179,8,0.15)',
-    '金': 'rgba(226,232,240,0.12)',
-    '水': 'rgba(59,130,246,0.15)',
+    '土': 'rgba(212,160,23,0.15)',
+    '金': 'rgba(180,170,140,0.18)',
+    '水': 'rgba(26,26,26,0.12)',
 };
 
 /** 천간 음양 */
@@ -345,6 +345,67 @@ export function calculateSeun(
 }
 
 // ──────────────────────────────────────────────
+// 일운 (Daily Luck / 日運)
+// ──────────────────────────────────────────────
+
+export type IlunDay = {
+    date: string; // YYYY-MM-DD
+    displayDate: string; // M/D
+    dayOfWeek: string;
+    stem: string;
+    branch: string;
+    stemKo: string;
+    branchKo: string;
+    stemElement: Element;
+    branchElement: Element;
+    sipsin: Sipsin;
+    isCurrent: boolean;
+};
+
+const DAY_OF_WEEK_KO = ['일', '월', '화', '수', '목', '금', '토'];
+
+export function calculateIlun(
+    dayMasterStem: string,
+    centerDate: Date,
+    range: number = 15
+): IlunDay[] {
+    const days: IlunDay[] = [];
+    const todayStr = `${centerDate.getFullYear()}-${String(centerDate.getMonth() + 1).padStart(2, '0')}-${String(centerDate.getDate()).padStart(2, '0')}`;
+
+    for (let i = -range; i <= range; i++) {
+        const d = new Date(centerDate);
+        d.setDate(d.getDate() + i);
+
+        // 일진 계산: 기준일(1900-01-01 = 甲子일)로부터의 경과일수
+        const baseDate = new Date(1900, 0, 1);
+        const diffDays = Math.floor((d.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+        const offset = ((diffDays % 60) + 60) % 60;
+        const stemIdx = offset % 10;
+        const branchIdx = offset % 12;
+        const stem = HEAVENLY_STEMS[stemIdx];
+        const branch = EARTHLY_BRANCHES[branchIdx];
+
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+        days.push({
+            date: dateStr,
+            displayDate: `${d.getMonth() + 1}/${d.getDate()}`,
+            dayOfWeek: DAY_OF_WEEK_KO[d.getDay()],
+            stem,
+            branch,
+            stemKo: STEMS_KO[stemIdx],
+            branchKo: BRANCHES_KO[branchIdx],
+            stemElement: STEM_ELEMENT[stem],
+            branchElement: BRANCH_ELEMENT[branch],
+            sipsin: getSipsin(dayMasterStem, stem),
+            isCurrent: dateStr === todayStr,
+        });
+    }
+
+    return days;
+}
+
+// ──────────────────────────────────────────────
 // 통합 만세력 결과
 // ──────────────────────────────────────────────
 
@@ -365,6 +426,7 @@ export type ManseryeokResult = {
     pillars: PillarDetail[];
     daeun: DaeunPeriod[];
     seun: SeunPeriod[];
+    ilun: IlunDay[];
     dayMaster: {
         stem: string;
         stemKo: string;
@@ -376,6 +438,7 @@ export type ManseryeokResult = {
         month: number;
         day: number;
         hour: number;
+        minute: number;
         gender: '남' | '여';
         calendar: 'solar' | 'lunar';
         unknownTime: boolean;
@@ -391,6 +454,7 @@ export function calculateManseryeok(
     calendar: 'solar' | 'lunar' = 'solar',
     unknownTime: boolean = false,
     currentYear?: number,
+    minute: number = 0,
 ): ManseryeokResult {
     const saju = calculateSaju(year, month, day, unknownTime ? 12 : hour);
     const dayMasterStem = saju.day.stem;
@@ -436,11 +500,13 @@ export function calculateManseryeok(
 
     const daeun = calculateDaeun(saju, gender, year, month, day, currentAge, 10);
     const seun = calculateSeun(dayMasterStem, year, now - 2, 10);
+    const ilun = calculateIlun(dayMasterStem, new Date());
 
     return {
         pillars,
         daeun,
         seun,
+        ilun,
         dayMaster: {
             stem: dayMasterStem,
             stemKo: saju.day.stemKo,
@@ -448,7 +514,7 @@ export function calculateManseryeok(
             yinyang: STEM_YINYANG[dayMasterStem],
         },
         birthInfo: {
-            year, month, day, hour, gender, calendar, unknownTime,
+            year, month, day, hour, minute, gender, calendar, unknownTime,
         },
     };
 }

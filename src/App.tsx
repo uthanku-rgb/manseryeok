@@ -50,60 +50,65 @@ function ElementSummary({ result }: { result: ManseryeokResult }) {
 
   return (
     <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-      {elements.map((el) => (
-        <div
-          key={el}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-            minWidth: 56,
-          }}
-        >
+      {elements.map((el) => {
+        const isMetal = el === '金';
+        const displayColor = isMetal ? '#8b7d6e' : ELEMENT_COLOR[el];
+        return (
           <div
+            key={el}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: `${ELEMENT_COLOR[el]}22`,
-              border: `2px solid ${ELEMENT_COLOR[el]}55`,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-              fontFamily: "'Noto Serif KR', serif",
-              color: ELEMENT_COLOR[el],
-              fontWeight: 400,
-            }}
-          >
-            {el}
-          </div>
-          <span style={{ fontSize: 11, color: '#4a3d32' }}>{ELEMENT_KO[el]}</span>
-          <div
-            style={{
-              width: 36,
-              height: 4,
-              borderRadius: 2,
-              background: 'rgba(0,0,0,0.06)',
-              overflow: 'hidden',
+              gap: 6,
+              minWidth: 56,
             }}
           >
             <div
               style={{
-                width: `${(counts[el] / maxCount) * 100}%`,
-                height: '100%',
-                borderRadius: 2,
-                background: ELEMENT_COLOR[el],
-                transition: 'width 0.5s',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: isMetal ? 'linear-gradient(135deg, #5a5349, #6b6258)' : `${ELEMENT_COLOR[el]}22`,
+                border: `2px solid ${isMetal ? '#7a705f' : `${ELEMENT_COLOR[el]}55`}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 18,
+                fontFamily: "'Noto Serif KR', serif",
+                color: isMetal ? '#fff' : ELEMENT_COLOR[el],
+                fontWeight: 400,
+                textShadow: isMetal ? '0 1px 3px rgba(0,0,0,0.3)' : undefined,
               }}
-            />
+            >
+              {el}
+            </div>
+            <span style={{ fontSize: 11, color: '#4a3d32' }}>{ELEMENT_KO[el]}</span>
+            <div
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                background: 'rgba(0,0,0,0.06)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${(counts[el] / maxCount) * 100}%`,
+                  height: '100%',
+                  borderRadius: 2,
+                  background: displayColor,
+                  transition: 'width 0.5s',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 10, color: '#3d3028' }}>
+              {counts[el].toFixed(1)}
+            </span>
           </div>
-          <span style={{ fontSize: 10, color: '#5a4d40' }}>
-            {counts[el].toFixed(1)}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -133,6 +138,8 @@ export default function App() {
       values.gender,
       values.calendar,
       values.unknownTime,
+      undefined,
+      parseInt(values.minute, 10) || 0,
     );
     setResult(r);
     setIsCalculated(true);
@@ -389,7 +396,7 @@ export default function App() {
               <span className="birth-info">
                 {result.birthInfo.calendar === 'solar' ? '양력' : '음력'}{' '}
                 {result.birthInfo.year}년 {result.birthInfo.month}월 {result.birthInfo.day}일{' '}
-                {result.birthInfo.unknownTime ? '(시간 미상)' : `${result.birthInfo.hour}시`}{' '}
+                {result.birthInfo.unknownTime ? '(시간 미상)' : `${result.birthInfo.hour}시 ${result.birthInfo.minute}분`}{' '}
                 · {result.birthInfo.gender === '남' ? '♂ 남자' : '♀ 여자'}
               </span>
             </div>
