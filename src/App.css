@@ -797,13 +797,175 @@
   margin-top: 1px;
 }
 
+/* 월운 */
+.wolun-scroll {
+  overflow-x: auto;
+  padding: 8px 0 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+}
+
+.wolun-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.wolun-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.wolun-track {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.wolun-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-width: 78px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.wolun-card:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.wolun-card.current {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.wolun-month {
+  font-size: 10px;
+  color: #2d2520;
+  font-weight: 600;
+}
+
+.wolun-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.wolun-hanja {
+  font-size: 20px;
+  font-weight: 300;
+  font-family: 'Noto Serif KR', 'Noto Serif', serif;
+  line-height: 1.1;
+}
+
+.wolun-hangul {
+  display: flex;
+  gap: 3px;
+  font-size: 10px;
+}
+
+.wolun-elements {
+  display: flex;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+/* ========================================
+   Client Overlay (저장된 만세력 보기)
+   ======================================== */
+
+.client-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+}
+
+.client-overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.client-overlay-content {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 600px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #f8f6f1;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.client-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 0;
+}
+
+.client-overlay-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1410;
+  margin: 0;
+}
+
+.client-overlay-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: #3d3028;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.client-overlay-close:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.client-list-btn {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: #7c3aed;
+}
+
+.client-list-btn:hover {
+  background: rgba(124, 58, 237, 0.14);
+}
+
 /* ========================================
    Auth Bar
    ======================================== */
 
 .auth-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
   padding: 12px 8px 0;
 }
@@ -819,18 +981,11 @@
   gap: 10px;
 }
 
-.auth-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .auth-name {
   font-size: 12px;
   color: #3d3028;
   font-weight: 500;
-  max-width: 140px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -848,16 +1003,6 @@
   align-items: center;
 }
 
-.auth-btn.login {
-  background: #fff;
-  color: #3d3028;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.auth-btn.login:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
 .auth-btn.logout {
   background: transparent;
   color: #6b5b4e;
@@ -866,6 +1011,103 @@
 
 .auth-btn.logout:hover {
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* Email/Password Auth Form */
+.auth-form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.auth-mode-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.auth-mode-btn {
+  padding: 6px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b5b4e;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-mode-btn.active {
+  background: #fff;
+  color: #1a1410;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.auth-input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: #1a1410;
+  transition: all 0.2s;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.35);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.08);
+}
+
+.auth-input::placeholder {
+  color: #a89888;
+}
+
+.auth-error {
+  font-size: 12px;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.06);
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.auth-submit-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.auth-submit-btn:hover {
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ========================================
@@ -1243,6 +1485,22 @@
   .ilun-card {
     border: 1px solid #ddd;
   }
+
+  .wolun-scroll {
+    overflow: visible;
+  }
+
+  .wolun-track {
+    flex-wrap: wrap;
+  }
+
+  .wolun-card {
+    border: 1px solid #ddd;
+  }
+
+  .client-overlay {
+    display: none;
+  }
 }
 
 /* ========================================
@@ -1327,6 +1585,15 @@
   }
 
   .ilun-hanja {
+    font-size: 16px;
+  }
+
+  .wolun-card {
+    min-width: 64px;
+    padding: 8px 6px;
+  }
+
+  .wolun-hanja {
     font-size: 16px;
   }
 }

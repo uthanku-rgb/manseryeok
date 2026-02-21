@@ -406,6 +406,79 @@ export function calculateIlun(
 }
 
 // ──────────────────────────────────────────────
+// 월운 (Monthly Luck / 月運)
+// ──────────────────────────────────────────────
+
+export type WolunMonth = {
+    year: number;
+    month: number;
+    displayMonth: string;
+    stem: string;
+    branch: string;
+    stemKo: string;
+    branchKo: string;
+    stemElement: Element;
+    branchElement: Element;
+    sipsin: Sipsin;
+    isCurrent: boolean;
+};
+
+/** 월건 계산: 해당 연도의 연천간으로부터 인월(1월)의 천간을 구하고, 12개월 전개 */
+export function calculateWolun(
+    dayMasterStem: string,
+    centerYear: number,
+    centerMonth: number,
+): WolunMonth[] {
+    const months: WolunMonth[] = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // 전후 6개월씩 총 13개월 표시 (현재 월 중심)
+    for (let i = -6; i <= 6; i++) {
+        let y = centerYear;
+        let m = centerMonth + i;
+        while (m < 1) { m += 12; y--; }
+        while (m > 12) { m -= 12; y++; }
+
+        // 사주의 해 결정 (입춘 기준 간략화: 2월 4일)
+        let sajuYear = y;
+        if (m === 1 || (m === 2 && 1 < 4)) {
+            // 1월과 2월 초는 전년도 기둥
+            if (m === 1) sajuYear = y - 1;
+        }
+
+        // 연간 인덱스 → 인월(寅月) 천간 시작
+        const yearStemIdx = ((sajuYear - 4) % 10 + 10) % 10;
+        const firstMonthStem = (yearStemIdx * 2 + 2) % 10;
+
+        // 월 → 지지 매핑: 1월=寅(2), 2월=卯(3), ... 11월=子(0), 12월=丑(1)
+        const monthBranchIdx = (m + 1) % 12; // 1→2(寅), 2→3(卯), ...
+        const monthDelta = (monthBranchIdx - 2 + 12) % 12;
+        const monthStemIdx = (firstMonthStem + monthDelta) % 10;
+
+        const stem = HEAVENLY_STEMS[monthStemIdx];
+        const branch = EARTHLY_BRANCHES[monthBranchIdx];
+
+        months.push({
+            year: y,
+            month: m,
+            displayMonth: `${y}.${m}월`,
+            stem,
+            branch,
+            stemKo: STEMS_KO[monthStemIdx],
+            branchKo: BRANCHES_KO[monthBranchIdx],
+            stemElement: STEM_ELEMENT[stem],
+            branchElement: BRANCH_ELEMENT[branch],
+            sipsin: getSipsin(dayMasterStem, stem),
+            isCurrent: y === currentYear && m === currentMonth,
+        });
+    }
+
+    return months;
+}
+
+// ──────────────────────────────────────────────
 // 통합 만세력 결과
 // ──────────────────────────────────────────────
 
@@ -426,6 +499,7 @@ export type ManseryeokResult = {
     pillars: PillarDetail[];
     daeun: DaeunPeriod[];
     seun: SeunPeriod[];
+    wolun: WolunMonth[];
     ilun: IlunDay[];
     dayMaster: {
         stem: string;
@@ -500,12 +574,15 @@ export function calculateManseryeok(
 
     const daeun = calculateDaeun(saju, gender, year, month, day, currentAge, 10);
     const seun = calculateSeun(dayMasterStem, year, now - 2, 10);
-    const ilun = calculateIlun(dayMasterStem, new Date());
+    const currentDate = new Date();
+    const wolun = calculateWolun(dayMasterStem, currentDate.getFullYear(), currentDate.getMonth() + 1);
+    const ilun = calculateIlun(dayMasterStem, currentDate);
 
     return {
         pillars,
         daeun,
         seun,
+        wolun,
         ilun,
         dayMaster: {
             stem: dayMasterStem,

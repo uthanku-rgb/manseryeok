@@ -5,6 +5,7 @@ import type { User, Session } from '@supabase/supabase-js';
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [authError, setAuthError] = useState<string | null>(null);
 
     useEffect(() => {
         // Get initial session
@@ -23,17 +24,30 @@ export function useAuth() {
         return () => subscription.unsubscribe();
     }, []);
 
-    const signInWithGoogle = useCallback(async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin,
-            },
+    const signUpWithEmail = useCallback(async (email: string, password: string) => {
+        setAuthError(null);
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
         });
         if (error) {
-            console.error('Login error:', error.message);
-            alert('로그인에 실패했습니다: ' + error.message);
+            setAuthError(error.message);
+            return false;
         }
+        return true;
+    }, []);
+
+    const signInWithEmail = useCallback(async (email: string, password: string) => {
+        setAuthError(null);
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+        if (error) {
+            setAuthError(error.message);
+            return false;
+        }
+        return true;
     }, []);
 
     const signOut = useCallback(async () => {
@@ -43,11 +57,18 @@ export function useAuth() {
         }
     }, []);
 
+    const clearError = useCallback(() => {
+        setAuthError(null);
+    }, []);
+
     return {
         user,
         loading,
         isLoggedIn: !!user,
-        signInWithGoogle,
+        authError,
+        signUpWithEmail,
+        signInWithEmail,
         signOut,
+        clearError,
     };
 }

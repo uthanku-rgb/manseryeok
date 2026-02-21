@@ -19,8 +19,9 @@ function metalClass(el: Element, size: 'lg' | 'sm' | 'xs' = 'lg'): string {
 }
 
 export default function DaeunTimeline({ result }: DaeunTimelineProps) {
-    const { daeun, seun, ilun } = result;
+    const { daeun, seun, wolun, ilun } = result;
     const scrollRef = useRef<HTMLDivElement>(null);
+    const wolunScrollRef = useRef<HTMLDivElement>(null);
     const ilunScrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -31,6 +32,15 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
             }
         }
     }, [daeun]);
+
+    useEffect(() => {
+        if (wolunScrollRef.current) {
+            const currentEl = wolunScrollRef.current.querySelector('.wolun-card.current');
+            if (currentEl) {
+                currentEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        }
+    }, [wolun]);
 
     useEffect(() => {
         if (ilunScrollRef.current) {
@@ -128,6 +138,54 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                         <SipsinTag sipsin={s.sipsin} small />
                     </div>
                 ))}
+            </div>
+
+            {/* 월운 (Monthly Luck) */}
+            <div className="section-header" style={{ marginTop: 32 }}>
+                <h3 className="section-title">
+                    <span className="section-icon">☽</span>
+                    월운 (月運)
+                </h3>
+                <span className="section-sub">월별 운의 흐름 · 이번달 기준 ±6개월</span>
+            </div>
+
+            <div className="wolun-scroll" ref={wolunScrollRef}>
+                <div className="wolun-track">
+                    {wolun.map((w) => (
+                        <div
+                            key={`${w.year}-${w.month}`}
+                            className={`wolun-card ${w.isCurrent ? 'current' : ''}`}
+                            style={{
+                                borderColor: w.isCurrent
+                                    ? (w.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[w.stemElement])
+                                    : 'rgba(0,0,0,0.06)',
+                                background: w.isCurrent
+                                    ? `linear-gradient(135deg, ${ELEMENT_BG[w.stemElement]}, ${ELEMENT_BG[w.branchElement]})`
+                                    : 'rgba(255,255,255,0.5)',
+                            }}
+                        >
+                            {w.isCurrent && <div className="current-marker">이번달</div>}
+                            <div className="wolun-month">{w.displayMonth}</div>
+                            <div className="wolun-pillar">
+                                <span className={`wolun-hanja ${metalClass(w.stemElement, 'sm')}`} style={{ color: ELEMENT_COLOR[w.stemElement] }}>
+                                    {w.stem}
+                                </span>
+                                <span className={`wolun-hanja ${metalClass(w.branchElement, 'sm')}`} style={{ color: ELEMENT_COLOR[w.branchElement] }}>
+                                    {w.branch}
+                                </span>
+                            </div>
+                            <div className="wolun-hangul">
+                                <span className={metalClass(w.stemElement, 'xs')} style={{ color: ELEMENT_COLOR[w.stemElement] }}>{w.stemKo}</span>
+                                <span className={metalClass(w.branchElement, 'xs')} style={{ color: ELEMENT_COLOR[w.branchElement] }}>{w.branchKo}</span>
+                            </div>
+                            <SipsinTag sipsin={w.sipsin} small />
+                            <div className="wolun-elements">
+                                <ElementDot element={w.stemElement} />
+                                <ElementDot element={w.branchElement} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* 일운 (Daily Luck) */}
