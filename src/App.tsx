@@ -123,6 +123,7 @@ export default function App() {
   const [showClientList, setShowClientList] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -137,7 +138,8 @@ export default function App() {
       const success = await signUpWithEmail(email, password);
       if (success && passwordRef.current) passwordRef.current.value = '';
     } else {
-      await signInWithEmail(email, password);
+      const success = await signInWithEmail(email, password);
+      if (success) setShowAuthModal(false);
     }
     setAuthSubmitting(false);
   }, [authMode, signUpWithEmail, signInWithEmail]);
@@ -214,21 +216,47 @@ export default function App() {
 
   return (
     <div className="manseryeok-page">
-      {/* Auth Bar */}
-      <div className="auth-bar no-print">
-        {authLoading ? (
-          <span className="auth-loading">⋯</span>
-        ) : isLoggedIn ? (
-          <div className="auth-user">
-            <span className="auth-name">
-              {user?.email || ''}
-            </span>
-            <button type="button" className="auth-btn logout" onClick={signOut}>
+      {/* Floating Auth Button (bottom-right) */}
+      <div className="auth-floating no-print">
+        {authLoading ? null : isLoggedIn ? (
+          <div className="auth-floating-logged-in">
+            <span className="auth-floating-email">{user?.email?.split('@')[0]}</span>
+            <button type="button" className="auth-floating-btn logged-in" onClick={signOut} title="로그아웃">
               로그아웃
             </button>
           </div>
         ) : (
-          <div className="auth-form-container">
+          <button
+            type="button"
+            className="auth-floating-btn"
+            onClick={() => setShowAuthModal(true)}
+            title="로그인"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Auth Modal */}
+      {showAuthModal && !isLoggedIn && (
+        <div className="auth-modal-overlay no-print">
+          <div className="auth-modal-backdrop" onClick={() => setShowAuthModal(false)} />
+          <div className="auth-modal-content">
+            <button
+              type="button"
+              className="auth-modal-close"
+              onClick={() => setShowAuthModal(false)}
+            >
+              ✕
+            </button>
+            <div className="auth-modal-header">
+              <span className="auth-modal-icon">☰</span>
+              <h3 className="auth-modal-title">만세력 로그인</h3>
+              <p className="auth-modal-subtitle">로그인하면 만세력을 저장할 수 있습니다</p>
+            </div>
             <div className="auth-mode-toggle">
               <button
                 type="button"
@@ -271,8 +299,8 @@ export default function App() {
               </button>
             </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="manseryeok-header">
