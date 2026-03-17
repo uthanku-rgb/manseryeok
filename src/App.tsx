@@ -52,7 +52,7 @@ function ElementSummary({ result }: { result: ManseryeokResult }) {
     <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
       {elements.map((el) => {
         const isMetal = el === '金';
-        const displayColor = isMetal ? '#8b7d6e' : ELEMENT_COLOR[el];
+        const displayColor = isMetal ? '#666' : ELEMENT_COLOR[el];
         return (
           <div
             key={el}
@@ -69,8 +69,8 @@ function ElementSummary({ result }: { result: ManseryeokResult }) {
                 width: 44,
                 height: 44,
                 borderRadius: '50%',
-                background: isMetal ? 'linear-gradient(135deg, #5a5349, #6b6258)' : `${ELEMENT_COLOR[el]}22`,
-                border: `2px solid ${isMetal ? '#7a705f' : `${ELEMENT_COLOR[el]}55`}`,
+                background: isMetal ? '#fff' : `${ELEMENT_COLOR[el]}22`,
+                border: `2px solid ${isMetal ? '#555' : `${ELEMENT_COLOR[el]}55`}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -78,7 +78,8 @@ function ElementSummary({ result }: { result: ManseryeokResult }) {
                 fontFamily: "'Noto Serif KR', serif",
                 color: isMetal ? '#fff' : ELEMENT_COLOR[el],
                 fontWeight: 400,
-                textShadow: isMetal ? '0 1px 3px rgba(0,0,0,0.3)' : undefined,
+                WebkitTextStroke: isMetal ? '1px #333' : undefined,
+                paintOrder: isMetal ? 'stroke fill' as any : undefined,
               }}
             >
               {el}

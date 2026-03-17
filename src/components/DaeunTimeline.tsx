@@ -1,11 +1,13 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
     ELEMENT_COLOR,
     ELEMENT_BG,
     ELEMENT_KO,
     SIPSIN_COLOR,
+    calculateSeun,
+    calculateWolun,
 } from '../lib/manseryeok';
-import type { ManseryeokResult, Sipsin, Element } from '../lib/manseryeok';
+import type { ManseryeokResult, Sipsin, Element, SeunPeriod, DaeunPeriod, WolunMonth } from '../lib/manseryeok';
 
 type DaeunTimelineProps = {
     result: ManseryeokResult;
@@ -19,10 +21,72 @@ function metalClass(el: Element, size: 'lg' | 'sm' | 'xs' = 'lg'): string {
 }
 
 export default function DaeunTimeline({ result }: DaeunTimelineProps) {
-    const { daeun, seun, wolun, ilun } = result;
+    const { daeun, seun, wolun, ilun, dayMaster, birthInfo } = result;
     const scrollRef = useRef<HTMLDivElement>(null);
+    const seunScrollRef = useRef<HTMLDivElement>(null);
     const wolunScrollRef = useRef<HTMLDivElement>(null);
     const ilunScrollRef = useRef<HTMLDivElement>(null);
+
+    // 대운 클릭 → 세운 연동 (초기값: 현재 대운 자동 선택)
+    const currentDaeun = daeun.find(d => d.isCurrent) || null;
+    const [selectedDaeun, setSelectedDaeun] = useState<DaeunPeriod | null>(currentDaeun);
+    const [daeunSeun, setDaeunSeun] = useState<SeunPeriod[]>(() => {
+        if (currentDaeun) {
+            const startYear = birthInfo.year + currentDaeun.startAge;
+            return calculateSeun(dayMaster.stem, birthInfo.year, startYear, 10);
+        }
+        return seun;
+    });
+
+    // 세운 클릭 → 월운 연동
+    const [selectedSeun, setSelectedSeun] = useState<SeunPeriod | null>(null);
+    const [customWolun, setCustomWolun] = useState<WolunMonth[] | null>(null);
+
+    // daeun/seun 데이터가 변경될 때 현재 대운 자동 선택
+    useEffect(() => {
+        if (!selectedDaeun && currentDaeun) {
+            setSelectedDaeun(currentDaeun);
+            const startYear = birthInfo.year + currentDaeun.startAge;
+            setDaeunSeun(calculateSeun(dayMaster.stem, birthInfo.year, startYear, 10));
+        } else if (!selectedDaeun) {
+            setDaeunSeun(seun);
+        }
+    }, [seun, daeun]);
+
+    const handleDaeunClick = useCallback((d: DaeunPeriod) => {
+        if (selectedDaeun?.index === d.index) {
+            // 재클릭 시 현재 대운으로 복귀
+            if (currentDaeun) {
+                setSelectedDaeun(currentDaeun);
+                const startYear = birthInfo.year + currentDaeun.startAge;
+                setDaeunSeun(calculateSeun(dayMaster.stem, birthInfo.year, startYear, 10));
+            } else {
+                setSelectedDaeun(null);
+                setDaeunSeun(seun);
+            }
+        } else {
+            setSelectedDaeun(d);
+            const startYear = birthInfo.year + d.startAge;
+            const newSeun = calculateSeun(dayMaster.stem, birthInfo.year, startYear, 10);
+            setDaeunSeun(newSeun);
+        }
+        // 대운 변경 시 세운 선택 리셋
+        setSelectedSeun(null);
+        setCustomWolun(null);
+    }, [selectedDaeun, seun, dayMaster.stem, birthInfo.year]);
+
+    const handleSeunClick = useCallback((s: SeunPeriod) => {
+        if (selectedSeun?.year === s.year) {
+            // 재클릭 시 기본 월운으로 복귀
+            setSelectedSeun(null);
+            setCustomWolun(null);
+        } else {
+            setSelectedSeun(s);
+            // 해당 연도 7월 기준으로 전후 6개월 = 1월~12월 전체
+            const newWolun = calculateWolun(dayMaster.stem, s.year, 7);
+            setCustomWolun(newWolun);
+        }
+    }, [selectedSeun, dayMaster.stem]);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -32,6 +96,15 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
             }
         }
     }, [daeun]);
+
+    useEffect(() => {
+        if (seunScrollRef.current) {
+            const currentEl = seunScrollRef.current.querySelector('.seun-card-v.current');
+            if (currentEl) {
+                currentEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        }
+    }, [daeunSeun]);
 
     useEffect(() => {
         if (wolunScrollRef.current) {
@@ -58,7 +131,7 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                     <span className="section-icon">☰</span>
                     대운 (大運)
                 </h3>
-                <span className="section-sub">10년 주기 운의 흐름</span>
+                <span className="section-sub">10년 주기 운의 흐름 · 클릭하면 세운 연동</span>
             </div>
 
             <div className="daeun-scroll" ref={scrollRef}>
@@ -66,17 +139,22 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                     {daeun.map((d) => (
                         <div
                             key={d.index}
-                            className={`daeun-card ${d.isCurrent ? 'current' : ''}`}
+                            className={`daeun-card ${d.isCurrent ? 'current' : ''} ${selectedDaeun?.index === d.index ? 'selected' : ''}`}
                             style={{
-                                borderColor: d.isCurrent
-                                    ? (d.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[d.stemElement])
-                                    : 'rgba(0,0,0,0.06)',
+                                borderColor: selectedDaeun?.index === d.index
+                                    ? '#6366f1'
+                                    : d.isCurrent
+                                        ? (d.stemElement === '金' ? '#555' : ELEMENT_COLOR[d.stemElement])
+                                        : 'rgba(0,0,0,0.06)',
                                 background: d.isCurrent
                                     ? `linear-gradient(135deg, ${ELEMENT_BG[d.stemElement]}, ${ELEMENT_BG[d.branchElement]})`
                                     : 'rgba(255,255,255,0.5)',
+                                cursor: 'pointer',
                             }}
+                            onClick={() => handleDaeunClick(d)}
                         >
                             {d.isCurrent && <div className="current-marker">현재</div>}
+                            {selectedDaeun?.index === d.index && <div className="selected-marker">선택</div>}
                             <div className="daeun-age">{d.startAge}~{d.endAge}세</div>
                             <div className="daeun-pillar">
                                 <span className={`daeun-hanja stem ${metalClass(d.stemElement)}`} style={{ color: ELEMENT_COLOR[d.stemElement] }}>
@@ -102,42 +180,80 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                 </div>
             </div>
 
+            {/* 세운 — 가로 스크롤 1줄, 세로 간지 (대운 스타일) */}
             <div className="section-header" style={{ marginTop: 32 }}>
                 <h3 className="section-title">
                     <span className="section-icon">◈</span>
                     세운 (歲運)
                 </h3>
-                <span className="section-sub">연도별 운의 흐름</span>
-            </div>
-
-            <div className="seun-grid">
-                {seun.map((s) => (
-                    <div
-                        key={s.year}
-                        className={`seun-card ${s.isCurrent ? 'current' : ''}`}
-                        style={{
-                            borderColor: s.isCurrent
-                                ? (s.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[s.stemElement])
-                                : 'rgba(0,0,0,0.06)',
-                            background: s.isCurrent
-                                ? `linear-gradient(135deg, ${ELEMENT_BG[s.stemElement]}, ${ELEMENT_BG[s.branchElement]})`
-                                : 'rgba(255,255,255,0.5)',
+                <span className="section-sub">
+                    {selectedDaeun
+                        ? `${selectedDaeun.startAge}~${selectedDaeun.endAge}세 대운 기간`
+                        : '연도별 운의 흐름'}
+                </span>
+                {selectedDaeun && selectedDaeun.index !== currentDaeun?.index && (
+                    <button
+                        type="button"
+                        className="seun-reset-btn"
+                        onClick={() => {
+                            if (currentDaeun) {
+                                setSelectedDaeun(currentDaeun);
+                                const startYear = birthInfo.year + currentDaeun.startAge;
+                                setDaeunSeun(calculateSeun(dayMaster.stem, birthInfo.year, startYear, 10));
+                            } else {
+                                setSelectedDaeun(null);
+                                setDaeunSeun(seun);
+                            }
                         }}
                     >
-                        {s.isCurrent && <div className="current-dot" style={{ background: s.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[s.stemElement] }} />}
-                        <div className="seun-year">{s.year}</div>
-                        <div className="seun-age">{s.age}세</div>
-                        <div className="seun-pillar">
-                            <span className={metalClass(s.stemElement, 'sm')} style={{ color: ELEMENT_COLOR[s.stemElement] }}>{s.stem}</span>
-                            <span className={metalClass(s.branchElement, 'sm')} style={{ color: ELEMENT_COLOR[s.branchElement] }}>{s.branch}</span>
+                        현재 세운으로
+                    </button>
+                )}
+            </div>
+
+            <div className="seun-grid-wrap" ref={seunScrollRef}>
+                <div className="seun-grid-10">
+                    {daeunSeun.map((s) => (
+                        <div
+                            key={s.year}
+                            className={`seun-card-v ${s.isCurrent ? 'current' : ''} ${selectedSeun?.year === s.year ? 'selected' : ''}`}
+                            style={{
+                                borderColor: selectedSeun?.year === s.year
+                                    ? '#6366f1'
+                                    : s.isCurrent
+                                        ? (s.stemElement === '金' ? '#555' : ELEMENT_COLOR[s.stemElement])
+                                        : 'rgba(0,0,0,0.06)',
+                                background: s.isCurrent
+                                    ? `linear-gradient(135deg, ${ELEMENT_BG[s.stemElement]}, ${ELEMENT_BG[s.branchElement]})`
+                                    : 'rgba(255,255,255,0.5)',
+                                cursor: 'pointer',
+                            }}
+                            onClick={() => handleSeunClick(s)}
+                        >
+                            {s.isCurrent && <div className="current-marker">올해</div>}
+                            {selectedSeun?.year === s.year && <div className="selected-marker">선택</div>}
+                            <div className="seun-year-v">{s.year}</div>
+                            <div className="seun-age-v">{s.age}세</div>
+                            <div className="seun-pillar-v">
+                                <span className={`seun-hanja-v ${metalClass(s.stemElement, 'sm')}`} style={{ color: ELEMENT_COLOR[s.stemElement] }}>
+                                    {s.stem}
+                                </span>
+                                <span className={`seun-hanja-v ${metalClass(s.branchElement, 'sm')}`} style={{ color: ELEMENT_COLOR[s.branchElement] }}>
+                                    {s.branch}
+                                </span>
+                            </div>
+                            <div className="seun-hangul-v">
+                                <span className={metalClass(s.stemElement, 'xs')} style={{ color: ELEMENT_COLOR[s.stemElement] }}>{s.stemKo}</span>
+                                <span className={metalClass(s.branchElement, 'xs')} style={{ color: ELEMENT_COLOR[s.branchElement] }}>{s.branchKo}</span>
+                            </div>
+                            <SipsinTag sipsin={s.sipsin} small />
+                            <div className="seun-elements-v">
+                                <ElementDot element={s.stemElement} />
+                                <ElementDot element={s.branchElement} />
+                            </div>
                         </div>
-                        <div className="seun-hangul">
-                            <span className={metalClass(s.stemElement, 'xs')} style={{ color: `${ELEMENT_COLOR[s.stemElement]}cc` }}>{s.stemKo}</span>
-                            <span className={metalClass(s.branchElement, 'xs')} style={{ color: `${ELEMENT_COLOR[s.branchElement]}cc` }}>{s.branchKo}</span>
-                        </div>
-                        <SipsinTag sipsin={s.sipsin} small />
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
 
             {/* 월운 (Monthly Luck) */}
@@ -146,18 +262,31 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                     <span className="section-icon">☽</span>
                     월운 (月運)
                 </h3>
-                <span className="section-sub">월별 운의 흐름 · 이번달 기준 ±6개월</span>
+                <span className="section-sub">
+                    {selectedSeun
+                        ? `${selectedSeun.year}년(${selectedSeun.age}세) 월별 운의 흐름`
+                        : '월별 운의 흐름 · 이번달 기준 ±6개월'}
+                </span>
+                {selectedSeun && (
+                    <button
+                        type="button"
+                        className="seun-reset-btn"
+                        onClick={() => { setSelectedSeun(null); setCustomWolun(null); }}
+                    >
+                        현재 월운으로
+                    </button>
+                )}
             </div>
 
             <div className="wolun-scroll" ref={wolunScrollRef}>
                 <div className="wolun-track">
-                    {wolun.map((w) => (
+                    {(customWolun || wolun).map((w) => (
                         <div
                             key={`${w.year}-${w.month}`}
                             className={`wolun-card ${w.isCurrent ? 'current' : ''}`}
                             style={{
                                 borderColor: w.isCurrent
-                                    ? (w.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[w.stemElement])
+                                    ? (w.stemElement === '金' ? '#555' : ELEMENT_COLOR[w.stemElement])
                                     : 'rgba(0,0,0,0.06)',
                                 background: w.isCurrent
                                     ? `linear-gradient(135deg, ${ELEMENT_BG[w.stemElement]}, ${ELEMENT_BG[w.branchElement]})`
@@ -205,7 +334,7 @@ export default function DaeunTimeline({ result }: DaeunTimelineProps) {
                             className={`ilun-card ${il.isCurrent ? 'current' : ''}`}
                             style={{
                                 borderColor: il.isCurrent
-                                    ? (il.stemElement === '金' ? '#b4aa8c' : ELEMENT_COLOR[il.stemElement])
+                                    ? (il.stemElement === '金' ? '#555' : ELEMENT_COLOR[il.stemElement])
                                     : 'rgba(0,0,0,0.06)',
                                 background: il.isCurrent
                                     ? `linear-gradient(135deg, ${ELEMENT_BG[il.stemElement]}, ${ELEMENT_BG[il.branchElement]})`
@@ -265,8 +394,8 @@ function ElementDot({ element }: { element: Element }) {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: element === '金' ? '#b4aa8c' : ELEMENT_COLOR[element],
-                border: element === '金' ? '1px solid #8b7d6e' : 'none',
+                background: element === '金' ? '#fff' : ELEMENT_COLOR[element],
+                border: element === '金' ? '1.5px solid #555' : 'none',
                 opacity: 0.85,
                 display: 'inline-block',
             }}

@@ -48,7 +48,7 @@ export const ELEMENT_COLOR: Record<Element, string> = {
     '火': '#ef4444',
     '土': '#d4a017',
     '金': '#ffffff',
-    '水': '#1a1a1a',
+    '水': '#1e3a5f',
 };
 
 /** 오행별 배경 색상 (투명도 적용) */
@@ -57,7 +57,7 @@ export const ELEMENT_BG: Record<Element, string> = {
     '火': 'rgba(239,68,68,0.15)',
     '土': 'rgba(212,160,23,0.15)',
     '金': 'rgba(180,170,140,0.18)',
-    '水': 'rgba(26,26,26,0.12)',
+    '水': 'rgba(30,58,95,0.15)',
 };
 
 /** 천간 음양 */
@@ -195,6 +195,134 @@ export const SIPSIN_COLOR: Record<Sipsin, string> = {
     '정관': '#a855f7',
     '편인': '#67e8f9',
     '정인': '#22d3ee',
+};
+
+// ──────────────────────────────────────────────
+// 합충형파해 (Branch Relations)
+// ──────────────────────────────────────────────
+
+export type BranchRelationType = '합' | '충' | '형' | '파' | '해';
+
+export type BranchRelation = {
+    type: BranchRelationType;
+    label: string;
+    pair: [string, string];
+    positions: [number, number]; // pillar indices (0=시주, 1=일주, 2=월주, 3=년주)
+};
+
+/** 육합 Six Harmonies */
+const YUKAP: [string, string][] = [
+    ['子', '丑'], ['寅', '亥'], ['卯', '戌'], ['辰', '酉'], ['巳', '申'], ['午', '未'],
+];
+
+/** 충 Clashes */
+const CHUNG: [string, string][] = [
+    ['子', '午'], ['丑', '未'], ['寅', '申'], ['卯', '酉'], ['辰', '戌'], ['巳', '亥'],
+];
+
+/** 형 Punishments (pairwise) */
+const HYUNG: [string, string][] = [
+    ['寅', '巳'], ['巳', '申'], ['寅', '申'],  // 삼형
+    ['丑', '戌'], ['戌', '未'], ['丑', '未'],  // 삼형
+    ['子', '卯'],                               // 무례형
+    ['辰', '辰'], ['午', '午'], ['酉', '酉'], ['亥', '亥'],  // 자형
+];
+
+/** 파 Destructions */
+const PA: [string, string][] = [
+    ['子', '酉'], ['丑', '辰'], ['寅', '亥'], ['卯', '午'], ['巳', '申'], ['未', '戌'],
+];
+
+/** 해 Harms */
+const HAE: [string, string][] = [
+    ['子', '未'], ['丑', '午'], ['寅', '巳'], ['卯', '辰'], ['申', '亥'], ['酉', '戌'],
+];
+
+function checkPair(pairs: [string, string][], a: string, b: string): boolean {
+    return pairs.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+}
+
+/** 인접 기둥 쌍만 검사하여 합충형파해 반환 */
+export function findAdjacentRelations(pillars: PillarDetail[]): BranchRelation[] {
+    const relations: BranchRelation[] = [];
+    const checks: { type: BranchRelationType; label: string; pairs: [string, string][] }[] = [
+        { type: '합', label: '합', pairs: YUKAP },
+        { type: '충', label: '충', pairs: CHUNG },
+        { type: '형', label: '형', pairs: HYUNG },
+        { type: '파', label: '파', pairs: PA },
+        { type: '해', label: '해', pairs: HAE },
+    ];
+
+    // 인접 기둥 쌍: (0,1), (1,2), (2,3) — 시주↔일주, 일주↔월주, 월주↔년주
+    for (let i = 0; i < pillars.length - 1; i++) {
+        if (pillars[i].isUnknown || pillars[i + 1].isUnknown) continue;
+        const a = pillars[i].branch;
+        const b = pillars[i + 1].branch;
+        for (const { type, label, pairs } of checks) {
+            if (checkPair(pairs, a, b)) {
+                relations.push({ type, label, pair: [a, b], positions: [i, i + 1] });
+            }
+        }
+    }
+    return relations;
+}
+
+/** 합충형파해 유형별 색상 */
+export const RELATION_COLOR: Record<BranchRelationType, string> = {
+    '합': '#3b82f6',
+    '충': '#ef4444',
+    '형': '#f97316',
+    '파': '#a855f7',
+    '해': '#6b7280',
+};
+
+// ──────────────────────────────────────────────
+// 천간 합충 (Stem Relations)
+// ──────────────────────────────────────────────
+
+export type StemRelationType = '합' | '충';
+
+export type StemRelation = {
+    type: StemRelationType;
+    label: string;
+    pair: [string, string];
+    positions: [number, number];
+};
+
+/** 천간 오합 (Five Combinations) */
+const STEM_HAP: [string, string][] = [
+    ['甲', '己'], ['乙', '庚'], ['丙', '辛'], ['丁', '壬'], ['戊', '癸'],
+];
+
+/** 천간 충 (Stem Clashes) */
+const STEM_CHUNG: [string, string][] = [
+    ['甲', '庚'], ['乙', '辛'], ['丙', '壬'], ['丁', '癸'], ['戊', '甲'], ['己', '乙'],
+];
+
+/** 인접 기둥 천간 합충 검사 */
+export function findAdjacentStemRelations(pillars: PillarDetail[]): StemRelation[] {
+    const relations: StemRelation[] = [];
+    const checks: { type: StemRelationType; label: string; pairs: [string, string][] }[] = [
+        { type: '합', label: '합', pairs: STEM_HAP },
+        { type: '충', label: '충', pairs: STEM_CHUNG },
+    ];
+    for (let i = 0; i < pillars.length - 1; i++) {
+        if (pillars[i].isUnknown || pillars[i + 1].isUnknown) continue;
+        const a = pillars[i].stem;
+        const b = pillars[i + 1].stem;
+        for (const { type, label, pairs } of checks) {
+            if (checkPair(pairs, a, b)) {
+                relations.push({ type, label, pair: [a, b], positions: [i, i + 1] });
+            }
+        }
+    }
+    return relations;
+}
+
+/** 천간 합충 색상 */
+export const STEM_RELATION_COLOR: Record<StemRelationType, string> = {
+    '합': '#3b82f6',
+    '충': '#ef4444',
 };
 
 // ──────────────────────────────────────────────
@@ -491,12 +619,15 @@ export type PillarDetail = {
     stemElement: Element;
     branchElement: Element;
     sipsin: Sipsin | '일간';
+    branchSipsin: Sipsin | '일주' | null;
     jijanggan: JijangganEntry[];
     isUnknown?: boolean;
 };
 
 export type ManseryeokResult = {
     pillars: PillarDetail[];
+    branchRelations: BranchRelation[];
+    stemRelations: StemRelation[];
     daeun: DaeunPeriod[];
     seun: SeunPeriod[];
     wolun: WolunMonth[];
@@ -530,11 +661,20 @@ export function calculateManseryeok(
     currentYear?: number,
     minute: number = 0,
 ): ManseryeokResult {
-    const saju = calculateSaju(year, month, day, unknownTime ? 12 : hour);
+    const saju = calculateSaju(year, month, day, unknownTime ? 12 : hour, minute);
     const dayMasterStem = saju.day.stem;
 
     const now = currentYear || new Date().getFullYear();
     const currentAge = now - year;
+
+    /** 지지 정기로 십신 계산 */
+    function getBranchSipsin(branch: string, isDay: boolean, isUnk: boolean): Sipsin | '일주' | null {
+        if (isUnk) return null;
+        if (isDay) return '일주';
+        const jeonggi = JIJANGGAN[branch].find(j => j.type === '정기');
+        if (!jeonggi) return null;
+        return getSipsin(dayMasterStem, jeonggi.stem);
+    }
 
     const pillars: PillarDetail[] = [
         {
@@ -543,6 +683,7 @@ export function calculateManseryeok(
             stemElement: STEM_ELEMENT[saju.hour.stem],
             branchElement: BRANCH_ELEMENT[saju.hour.branch],
             sipsin: unknownTime ? '일간' : getSipsin(dayMasterStem, saju.hour.stem),
+            branchSipsin: getBranchSipsin(saju.hour.branch, false, unknownTime),
             jijanggan: unknownTime ? [] : JIJANGGAN[saju.hour.branch],
             isUnknown: unknownTime,
         },
@@ -552,6 +693,7 @@ export function calculateManseryeok(
             stemElement: STEM_ELEMENT[saju.day.stem],
             branchElement: BRANCH_ELEMENT[saju.day.branch],
             sipsin: '일간',
+            branchSipsin: '일주',
             jijanggan: JIJANGGAN[saju.day.branch],
         },
         {
@@ -560,6 +702,7 @@ export function calculateManseryeok(
             stemElement: STEM_ELEMENT[saju.month.stem],
             branchElement: BRANCH_ELEMENT[saju.month.branch],
             sipsin: getSipsin(dayMasterStem, saju.month.stem),
+            branchSipsin: getBranchSipsin(saju.month.branch, false, false),
             jijanggan: JIJANGGAN[saju.month.branch],
         },
         {
@@ -568,6 +711,7 @@ export function calculateManseryeok(
             stemElement: STEM_ELEMENT[saju.year.stem],
             branchElement: BRANCH_ELEMENT[saju.year.branch],
             sipsin: getSipsin(dayMasterStem, saju.year.stem),
+            branchSipsin: getBranchSipsin(saju.year.branch, false, false),
             jijanggan: JIJANGGAN[saju.year.branch],
         },
     ];
@@ -578,8 +722,13 @@ export function calculateManseryeok(
     const wolun = calculateWolun(dayMasterStem, currentDate.getFullYear(), currentDate.getMonth() + 1);
     const ilun = calculateIlun(dayMasterStem, currentDate);
 
+    const branchRelations = findAdjacentRelations(pillars);
+    const stemRelations = findAdjacentStemRelations(pillars);
+
     return {
         pillars,
+        branchRelations,
+        stemRelations,
         daeun,
         seun,
         wolun,

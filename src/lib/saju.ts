@@ -34,7 +34,7 @@ function getGanJi(offset: number): SajuPillar {
     };
 }
 
-export function calculateSaju(year: number, month: number, day: number, hour: number = 12): SajuResult {
+export function calculateSaju(year: number, month: number, day: number, hour: number = 12, minute: number = 0): SajuResult {
     // 1. Year Pillar
     let sajuYear = year;
     if (month < 2 || (month === 2 && day < 4)) {
@@ -71,7 +71,11 @@ export function calculateSaju(year: number, month: number, day: number, hour: nu
     const dayPillar = getGanJi(normalizedDayOffset);
 
     // 4. Hour Pillar
-    const hourBranchIdx = Math.floor((hour + 1) / 2) % 12;
+    // 30분 경계 기준: 자시 23:30~01:30, 축시 01:30~03:30, 인시 03:30~05:30 등
+    const totalMinutes = hour * 60 + minute;
+    const adjusted = (totalMinutes - 23 * 60 - 30 + 1440) % 1440;
+    const hourBranchIdx = Math.floor(adjusted / 120) % 12;
+
     const dayStemIdx = HEAVENLY_STEMS.indexOf(dayPillar.stem);
     const firstHourStem = (dayStemIdx * 2) % 10;
     const hourStemIdx = (firstHourStem + hourBranchIdx) % 10;
